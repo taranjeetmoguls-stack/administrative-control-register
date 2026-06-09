@@ -8,8 +8,140 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="project/styles.css">
+<style>
+  #login-gate {
+    position: fixed; inset: 0; z-index: 9999;
+    background: oklch(0.975 0.004 250);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+  }
+  .login-card {
+    background: #fff; border: 1px solid oklch(0.92 0.006 260);
+    border-radius: 18px; padding: 40px 44px; width: 100%; max-width: 400px;
+    box-shadow: 0 12px 40px -12px oklch(0.4 0.03 264 / 0.22);
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .login-brand { display: flex; align-items: center; gap: 13px; }
+  .login-mark {
+    width: 44px; height: 44px; border-radius: 12px; flex: none;
+    background: linear-gradient(150deg, oklch(0.52 0.13 264), oklch(0.46 0.15 280));
+    display: grid; place-items: center; color: #fff;
+    box-shadow: 0 1px 3px oklch(0.4 0.03 264 / 0.15);
+  }
+  .login-mark svg { width: 22px; height: 22px; }
+  .login-brand h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin: 0; line-height: 1.2; }
+  .login-brand p { font-size: 12px; color: oklch(0.62 0.015 260); margin: 2px 0 0; font-weight: 500; }
+  .login-divider { height: 1px; background: oklch(0.92 0.006 260); margin: -4px 0; }
+  .login-fields { display: flex; flex-direction: column; gap: 14px; }
+  .login-fields label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: oklch(0.62 0.015 260); display: block; margin-bottom: 5px; }
+  .pw-wrap { position: relative; }
+  .pw-wrap input {
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    font-size: 14px; width: 100%; padding: 10px 42px 10px 13px;
+    border: 1px solid oklch(0.92 0.006 260); border-radius: 8px;
+    background: oklch(0.985 0.004 250); color: oklch(0.27 0.02 260);
+    outline: none; transition: .14s; box-sizing: border-box; letter-spacing: 0.04em;
+  }
+  .pw-wrap input:focus { border-color: oklch(0.52 0.13 264); box-shadow: 0 0 0 3px oklch(0.95 0.03 264); background: #fff; }
+  .pw-toggle {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: oklch(0.62 0.015 260);
+    padding: 4px; display: grid; place-items: center;
+  }
+  .pw-toggle:hover { color: oklch(0.27 0.02 260); }
+  .pw-toggle svg { width: 17px; height: 17px; }
+  .login-error {
+    font-size: 12.5px; color: oklch(0.58 0.17 27); background: oklch(0.96 0.040 27);
+    border: 1px solid oklch(0.74 0.13 27); border-radius: 7px;
+    padding: 9px 12px; display: none;
+  }
+  .login-error.show { display: block; }
+  .login-btn {
+    font-family: "Hanken Grotesk", system-ui, sans-serif;
+    font-size: 14px; font-weight: 700; background: oklch(0.52 0.13 264);
+    color: #fff; border: none; border-radius: 9px; padding: 11px;
+    cursor: pointer; transition: .14s; width: 100%;
+  }
+  .login-btn:hover { background: oklch(0.47 0.14 264); }
+  .login-btn:active { transform: scale(0.99); }
+  .login-footer { text-align: center; font-size: 11.5px; color: oklch(0.62 0.015 260); }
+</style>
 </head>
 <body>
+
+  <!-- Login Gate -->
+  <div id="login-gate">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="login-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div>
+          <h2>Administrative Control Register</h2>
+          <p>Hotel &amp; Corporate Office · Secure Access</p>
+        </div>
+      </div>
+      <div class="login-divider"></div>
+      <div class="login-fields">
+        <div>
+          <label for="pw-input">Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="pw-input" placeholder="Enter your password" autocomplete="current-password">
+            <button class="pw-toggle" id="pw-toggle" type="button" tabindex="-1" aria-label="Show/hide password">
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
+      </div>
+      <button class="login-btn" id="login-btn">Sign In</button>
+      <div class="login-footer">Authorized personnel only</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var PASS = "Taran@#$567";
+      var SESSION_KEY = "acr_auth";
+      var gate = document.getElementById("login-gate");
+
+      if (sessionStorage.getItem(SESSION_KEY) === "1") { gate.style.display = "none"; return; }
+
+      var input = document.getElementById("pw-input");
+      var btn = document.getElementById("login-btn");
+      var err = document.getElementById("login-error");
+      var toggle = document.getElementById("pw-toggle");
+      var eye = document.getElementById("eye-icon");
+
+      function attempt() {
+        if (input.value === PASS) {
+          sessionStorage.setItem(SESSION_KEY, "1");
+          gate.style.transition = "opacity .25s";
+          gate.style.opacity = "0";
+          setTimeout(function () { gate.style.display = "none"; }, 260);
+        } else {
+          err.classList.add("show");
+          input.value = "";
+          input.focus();
+          input.style.borderColor = "oklch(0.74 0.13 27)";
+          setTimeout(function () { input.style.borderColor = ""; }, 1200);
+        }
+      }
+
+      btn.addEventListener("click", attempt);
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") attempt(); });
+      toggle.addEventListener("click", function () {
+        var show = input.type === "password";
+        input.type = show ? "text" : "password";
+        eye.innerHTML = show
+          ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+          : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      });
+
+      input.focus();
+    })();
+  </script>
+
   <header class="appbar">
     <div class="appbar-top">
       <div class="brand">
